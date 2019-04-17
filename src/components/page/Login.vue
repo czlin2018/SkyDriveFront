@@ -3,8 +3,8 @@
         <div class="ms-login">
             <div class="ms-title">陈泽林的分布式网盘管理系统</div>
             <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="0px" class="ms-content">
-                <el-form-item prop="username">
-                    <el-input v-model="ruleForm.username" placeholder="账户(邮箱或用户名)">
+                <el-form-item prop="name">
+                    <el-input v-model="ruleForm.name" placeholder="账户(邮箱或用户名)">
                         <el-button slot="prepend" icon="el-icon-lx-people"></el-button>
                     </el-input>
                 </el-form-item>
@@ -27,11 +27,11 @@
         data: function(){
             return {
                 ruleForm: {
-                    username: 'admin',
-                    password: '123123'
+                    name: '',
+                    password: ''
                 },
                 rules: {
-                    username: [
+                    name: [
                         { required: true, message: '请输入用户名', trigger: 'blur' }
                     ],
                     password: [
@@ -44,9 +44,17 @@
             submitForm(formName) {
                 this.$refs[formName].validate((valid) => {
                     if (valid) {
-                       
-                        localStorage.setItem('ms_username',this.ruleForm.username);
-                        this.$router.push('/');
+                        this.$axios.post('http://localhost:8082/register/joinIn', this.ruleForm).then((res) => {
+                           console.log('res', res);
+                           if(res.data.code === 0) {
+                            localStorage.setItem('ms_username',this.ruleForm.name);
+                            this.$router.push('/');
+                           }
+                           else {
+                               this.$message.error(res.data.msg);
+                           }
+
+                        });
                     } else {
                         console.log('error submit!!');
                         return false;
