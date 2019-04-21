@@ -6,47 +6,57 @@
             </el-breadcrumb>
         </div>
         <div class="container">
-            <div class="handle-box">
-                <el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>
-                <el-select v-model="select_cate" placeholder="筛选省份" class="handle-select mr10">
-                    <el-option key="1" label="广东省" value="广东省"></el-option>
-                    <el-option key="2" label="湖南省" value="湖南省"></el-option>
-                </el-select>
+            <div class="handle-box">    
                 <el-input v-model="select_word" placeholder="筛选关键词" class="handle-input mr10"></el-input>
                 <el-button type="primary" icon="search" @click="search">搜索</el-button>
+                <div style="float:right;margin-right:20px">
+                 <el-button type="primary" icon="delete" class="handle-del mr10" @click="delAll">批量删除</el-button>
+                </div>
             </div>
-            <el-table :data="data" border class="table" ref="multipleTable" @selection-change="handleSelectionChange">
+            <el-table :data="tableData" border class="table" :height="height"  @selection-change="handleSelectionChange">
                 <el-table-column type="selection" width="55" align="center"></el-table-column>
-                <el-table-column prop="date" label="日期" sortable width="150">
+                <el-table-column prop="id" label="编号" sortable width="150">
                 </el-table-column>
                 <el-table-column prop="name" label="姓名" width="120">
                 </el-table-column>
-                <el-table-column prop="address" label="地址" :formatter="formatter">
+                <el-table-column prop="userId" label="邮箱">
                 </el-table-column>
                 <el-table-column label="操作" width="180" align="center">
                     <template slot-scope="scope">
-                        <el-button type="text" icon="el-icon-edit" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-                        <el-button type="text" icon="el-icon-delete" class="red" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+                        <el-button type="text" icon="el-icon-edit" @click="handleEdit(scope.row)">编辑</el-button>
+                        <el-button type="text" icon="el-icon-delete" class="red" @click="handleDelete(scope.row)">删除</el-button>
                     </template>
                 </el-table-column>
             </el-table>
             <div class="pagination">
-                <el-pagination background @current-change="handleCurrentChange" layout="prev, pager, next" :total="1000">
+                <el-pagination
+                    background
+                    @size-change="handleSizeChange"
+                    @current-change="handleCurrentChange"
+                    :current-page="currentPage"
+                    :page-sizes="[10, 20, 30, 40]"
+                    :page-size="pageSize"
+                    layout="total, sizes, prev, pager, next, jumper"
+                    :total="total">
                 </el-pagination>
             </div>
         </div>
 
         <!-- 编辑弹出框 -->
         <el-dialog title="编辑" :visible.sync="editVisible" width="30%">
-            <el-form ref="form" :model="form" label-width="50px">
-                <el-form-item label="日期">
-                    <el-date-picker type="date" placeholder="选择日期" v-model="form.date" value-format="yyyy-MM-dd" style="width: 100%;"></el-date-picker>
+            <el-form ref="form" :model="form" :rules="rules" label-width="50px">
+                <el-form-item label="编号">
+                     <el-input v-model="form.id" disabled></el-input>
                 </el-form-item>
-                <el-form-item label="姓名">
+                <el-form-item label="姓名" prop="name">
                     <el-input v-model="form.name"></el-input>
                 </el-form-item>
-                <el-form-item label="地址">
-                    <el-input v-model="form.address"></el-input>
+                <el-form-item label="邮箱" prop="email">
+                    <el-input v-model="form.email"></el-input>
+                </el-form-item>
+                <el-form-item>
+                <el-radio v-model="form.userType" label="admin">管理员</el-radio>
+                <el-radio v-model="form.userType" label="user">普通用户</el-radio>
                 </el-form-item>
 
             </el-form>
@@ -72,97 +82,111 @@
         name: 'basetable',
         data() {
             return {
-                url: './vuetable.json',
                 tableData: [],
-                cur_page: 1,
-                multipleSelection: [],
-                select_cate: '',
                 select_word: '',
-                del_list: [],
                 is_search: false,
                 editVisible: false,
                 delVisible: false,
                 form: {
                     name: '',
-                    date: '',
-                    address: ''
+                    id: '',
+                    email: '',
+                    userType:''
                 },
-                idx: -1
+                currentPage:1,
+                pageSize:10,
+                total:0,
+                ids:0,
+                height: document.documentElement.clientHeight - 345,
+                rules: {
+                    name: [{ required: true, message: "请输入用户名", trigger: "blur" }],
+                    email:[
+                        { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+                        { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }
+                        ]
+                }
             }
         },
         created() {
             this.getData();
         },
-        computed: {
-            data() {
-                return this.tableData.filter((d) => {
-                    let is_del = false;
-                    for (let i = 0; i < this.del_list.length; i++) {
-                        if (d.name === this.del_list[i].name) {
-                            is_del = true;
-                            break;
-                        }
-                    }
-                    if (!is_del) {
-                        if (d.address.indexOf(this.select_cate) > -1 &&
-                            (d.name.indexOf(this.select_word) > -1 ||
-                                d.address.indexOf(this.select_word) > -1)
-                        ) {
-                            return d;
-                        }
-                    }
-                })
-            }
-        },
         methods: {
             // 分页导航
+            handleSizeChange(val) {
+                this.pageSize = val;
+                this.getData();
+            },
             handleCurrentChange(val) {
-                this.cur_page = val;
+                this.currentPage = val;
                 this.getData();
             },
             // 获取 easy-mock 的模拟数据
             getData() {
                 // 开发环境使用 easy-mock 数据，正式环境使用 json 文件
-                if (process.env.NODE_ENV === 'development') {
-                    this.url = '/ms/table/list';
-                };
-                this.$axios.post(this.url, {
-                    page: this.cur_page
-                }).then((res) => {
-                    this.tableData = res.data.list;
-                })
+                // if (process.env.NODE_ENV === 'development') {
+                //     this.url = '/ms/table/list';
+                // };
+                // this.$axios.post(this.url, {
+                //     page: this.cur_page
+                // }).then((res) => {
+                //     this.tableData = res.data.list;
+                // })
+                const url = "http://localhost:9100/register/getList?name="+ this.select_word + "&pageSize=" + this.pageSize + "&pageNo=" + this.currentPage
+                this.$axios.get(url)
+                .then(res => {
+                if (res.data.code === 0) {
+                    this.total = res.data.data.totalCount
+                    this.tableData = res.data.data.pageData
+                } else {
+                    this.$message.error({
+                  message: res.data.msg,
+                  center: true
+                });
+                }
+                });
             },
+            
             search() {
-                this.is_search = true;
+                this.pageSize = 10
+                this.currentPage = 1
+                this.getData()
             },
-            formatter(row, column) {
-                return row.address;
-            },
-            filterTag(value, row) {
-                return row.tag === value;
-            },
-            handleEdit(index, row) {
-                this.idx = index;
-                const item = this.tableData[index];
+            handleEdit(row) {
                 this.form = {
-                    name: item.name,
-                    date: item.date,
-                    address: item.address
+                    name: row.name,
+                    id: row.id,
+                    email: row.userId
                 }
                 this.editVisible = true;
             },
-            handleDelete(index, row) {
-                this.idx = index;
+            handleDelete(row) {
+                this.ids = row.id             
                 this.delVisible = true;
             },
             delAll() {
                 const length = this.multipleSelection.length;
-                let str = '';
-                this.del_list = this.del_list.concat(this.multipleSelection);
+                const del_list = []
                 for (let i = 0; i < length; i++) {
-                    str += this.multipleSelection[i].name + ' ';
+                    del_list[i] = this.multipleSelection[i].id
                 }
-                this.$message.error('删除了' + str);
+                const url = "http://localhost:9100/register/delete?ids="+ del_list
+                console.log(del_list)
+                this.$axios.get(url)
+                .then(res => {
+                if (res.data.code === 0) {
+                    this.$message.success({
+                  message: res.data.msg,
+                  center: true
+                });
+                this.getData()
+                this.delVisible = false
+                } else {
+                    this.$message.error({
+                  message: res.data.msg,
+                  center: true
+                });
+                }
+                });
                 this.multipleSelection = [];
             },
             handleSelectionChange(val) {
@@ -170,15 +194,60 @@
             },
             // 保存编辑
             saveEdit() {
-                this.$set(this.tableData, this.idx, this.form);
-                this.editVisible = false;
-                this.$message.success(`修改第 ${this.idx+1} 行成功`);
+                if(this.form.name !== '' && this.form.email !== ''){
+                    const url = "http://localhost:9100/register/update"
+                    const par = {
+                        id:this.form.id,
+                        userId: this.form.email,
+                        name: this.form.name,
+                        userType:this.form.userType
+                    }
+                    console.log(par)
+                this.$axios.post(url,par)
+                .then(res => {
+                if (res.data.code === 0) {
+                    this.$message.success({
+                  message: res.data.msg,
+                  center: true
+                });
+                this.getData()
+                this.editVisible = false
+                } else {
+                    this.$message.error({
+                  message: res.data.msg,
+                  center: true
+                });
+                }
+                });
+                }else{
+                    this.$message.error({
+                  message: '请输入完整信息',
+                  center: true
+                
+                });
+                }
             },
             // 确定删除
             deleteRow(){
-                this.tableData.splice(this.idx, 1);
-                this.$message.success('删除成功');
-                this.delVisible = false;
+                const idList = []
+                idList[0] = this.ids
+                const url = "http://localhost:9100/register/delete?ids="+ idList
+                this.$axios.get(url)
+                .then(res => {
+                if (res.data.code === 0) {
+                    this.$message.success({
+                  message: res.data.msg,
+                  center: true
+                });
+                this.getData()
+                this.delVisible = false
+                } else {
+                    this.$message.error({
+                  message: res.data.msg,
+                  center: true
+                });
+                }
+                });
             }
         }
     }
