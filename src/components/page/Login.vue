@@ -98,11 +98,8 @@ export default {
   data() {
     var validatePass2 = (rule, value, callback) => {
       if (value === "") {
-        console.log("value", value);
         callback(new Error("请再次输入密码"));
       } else if (value !== this.regForm.passwords) {
-        console.log("value", value);
-        console.log("this.regForm.passwords", this.regForm.passwords);
         callback(new Error("两次输入密码不一致!"));
       } else {
         callback();
@@ -159,7 +156,8 @@ export default {
               message: res.data.msg,
               center: true
             });
-            localStorage.setItem("ms_username", res.data.data);
+            localStorage.setItem("ms_username", res.data.data.name);
+            localStorage.setItem("ms_id", res.data.data.userId);
             this.$router.push("/");
           } else {
             this.$message.error({
@@ -189,7 +187,7 @@ export default {
               message: res.data.msg,
               center: true
             });
-            //localStorage.setItem("ms_username", res.data.data);
+
             this.showReg = false;
             this.ruleForm.name = regName.email;
             this.ruleForm.password = regName.passwords;
