@@ -3,7 +3,7 @@
     <div class="crumbs">
       <el-breadcrumb separator="/">
         <el-breadcrumb-item>
-          <i class="el-icon-lx-cascades"></i> 基础表格
+          <i class="el-icon-lx-cascades"></i> 用户管理
         </el-breadcrumb-item>
       </el-breadcrumb>
     </div>
@@ -173,7 +173,8 @@ export default {
       this.form = {
         name: row.name,
         id: row.id,
-        email: row.userId
+        email: row.userId,
+        userType: row.userType
       };
       this.editVisible = true;
       if (this.form.name === localStorage.getItem("ms_username")) {

@@ -32,7 +32,7 @@ export default new Router({
     {
       path: '/uPloadAddDownload',
       component: resolve => require(['../components/page/UPloadAddDownload.vue'], resolve),
-      meta: { title: '上传下载' }
+      meta: { title: '文件管理' }
     },
     {
       path: '/form',

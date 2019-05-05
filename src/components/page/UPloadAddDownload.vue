@@ -98,6 +98,7 @@ export default {
       path: "/", //请求路径
       fileVisible: false, //创建文件夹弹窗
       fileName: "", //新建文件名
+      userId: "", //当前账户
       curruntFile: "", //当前选择文件夹
       fileList: [],
       uploadData: {},
@@ -172,13 +173,18 @@ export default {
       });
     },
     funData() {
+      if (localStorage.getItem("user_type") === "user") {
+        this.userId = localStorage.getItem("ms_id");
+      }
       const url =
         "http://localhost:9200/readPathInfo?path=" +
         this.path +
         "&pageNo=" +
         "1" +
         "&pageSize=" +
-        "10";
+        "10" +
+        "&userId=" +
+        this.userId;
       this.$axios.get(url).then(res => {
         if (res.data.code === 0) {
           this.$message.success({
@@ -211,7 +217,11 @@ export default {
         path:
           this.path === "/"
             ? this.path + this.fileName
-            : this.path + "/" + this.fileName
+            : this.path + "/" + this.fileName,
+        userId:
+          localStorage.getItem("user_type") === "idmin"
+            ? ""
+            : localStorage.getItem("ms_id")
       };
 
       this.$axios.post("http://localhost:9200/mkdir", par).then(res => {

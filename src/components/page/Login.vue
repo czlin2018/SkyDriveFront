@@ -158,6 +158,7 @@ export default {
             });
             localStorage.setItem("ms_username", res.data.data.name);
             localStorage.setItem("ms_id", res.data.data.userId);
+            localStorage.setItem("user_type", res.data.data.userType);
             this.$router.push("/");
           } else {
             this.$message.error({
