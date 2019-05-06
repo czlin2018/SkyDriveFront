@@ -260,9 +260,10 @@ export default {
     },
     upload() {
       const par = {
-        path: this.path
+        path: this.path,     
       };
       this.uploadData.path = par.path;
+      this.uploadData.userId = localStorage.getItem("ms_id");
     },
     upload_success(response, file, fileList) {
       this.funData();
