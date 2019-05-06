@@ -44,7 +44,7 @@
             v-if="!scope.row.directory"
             type="text"
             size="mini"
-            @click="downLoad(scope.row.name)"
+            @click="downLoad(scope.row.fullPath)"
           >下载</el-button>
           <span v-if="!scope.row.directory" style="display:inline-block;margin: 0 5px;">|</span>
           <el-button
@@ -130,7 +130,9 @@ export default {
         "&pageNo=" +
         this.currentPage +
         "&pageSize=" +
-        val;
+        val +
+        "&userType=" +
+        localStorage.getItem("user_type");
       this.$axios.get(url).then(res => {
         if (res.data.code === 0) {
           this.$message.success({
@@ -155,7 +157,9 @@ export default {
         "&pageNo=" +
         val +
         "&pageSize=" +
-        this.pageSize;
+        this.pageSize +
+        "&userType=" +
+        localStorage.getItem("user_type");
       this.$axios.get(url).then(res => {
         if (res.data.code === 0) {
           this.$message.success({
@@ -184,7 +188,9 @@ export default {
         "&pageSize=" +
         "10" +
         "&userId=" +
-        this.userId;
+        this.userId +
+        "&userType=" +
+        localStorage.getItem("user_type");
       this.$axios.get(url).then(res => {
         if (res.data.code === 0) {
           this.$message.success({
@@ -260,7 +266,7 @@ export default {
     },
     upload() {
       const par = {
-        path: this.path,     
+        path: this.path
       };
       this.uploadData.path = par.path;
       this.uploadData.userId = localStorage.getItem("ms_id");
@@ -268,9 +274,9 @@ export default {
     upload_success(response, file, fileList) {
       this.funData();
     },
-    downLoad(name) {
+    downLoad(fullPath) {
       const par = {
-        path: this.path === "/" ? this.path + name : this.path + "/" + name
+        path: fullPath
       };
       this.$axios.post("http://localhost:9200/downloadFile", par).then(res => {
         if (res.data.code === 0) {
