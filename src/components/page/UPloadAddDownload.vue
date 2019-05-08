@@ -19,6 +19,10 @@
           <i class="el-icon-upload el-icon--right"></i>
         </el-button>
       </el-upload>
+      <el-button type="primary" size="mini" @click="openGetCode">
+        获得分享
+        <i class="el-icon-edit el-icon--right"></i>
+      </el-button>
     </div>
     <div style="margin-bottom:15px;">
       <el-button type="text" size="mini" :disabled="showBtn" @click="backPrev">返回上一级</el-button>
@@ -37,9 +41,24 @@
           >{{scope.row.name}}</el-button>
           <span v-if="!scope.row.directory">{{scope.row.name}}</span>
         </template>
+
       </el-table-column>
-      <el-table-column label="操作" width="120px" align="center">
+      <el-table-column label="更新时间"  align="center">
         <template slot-scope="scope">
+          <span>{{scope.row.updateTime}}</span>
+      
+        </template>
+      </el-table-column>
+
+
+      <el-table-column label="操作" width="200px" align="center">
+        <template slot-scope="scope">
+          <el-button
+            type="text"
+            size="mini"
+            @click="deletefile(scope.row)"
+          >删除</el-button>
+          <span v-if="!scope.row.directory" style="display:inline-block;margin: 0 5px;">|</span>
           <el-button
             v-if="!scope.row.directory"
             type="text"
@@ -51,14 +70,9 @@
             v-if="!scope.row.directory"
             type="text"
             size="mini"
-            @click="deletefile(scope.row)"
-          >删除</el-button>
-          <el-button
-            v-if="scope.row.directory"
-            type="text"
-            size="mini"
-            @click="deletefile(scope.row)"
-          >删除</el-button>
+            @click="createCode(scope.row.fullPath)"
+          >生成分享码</el-button>
+
         </template>
       </el-table-column>
     </el-table>
@@ -82,6 +96,33 @@
       ></el-input>
       <el-button type="primary" size="mini" @click="saveFile">保存</el-button>
     </el-dialog>
+    <el-dialog
+        title="获取分享码"
+        :visible.sync="dialogVisible"
+        width="30%"
+      >
+        <span>获取成功：{{fileCode}}</span>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="dialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+        </span>
+      </el-dialog>
+
+      <el-dialog title="得到分享码" :visible.sync="getGetCodeFleg">
+        <el-form :model="form">
+          <el-form-item label="请输入分享码" :label-width="formLabelWidth">
+            <el-input v-model="fileCodeFromOter" autocomplete="off"></el-input>
+          </el-form-item>
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="getGetCodeFleg = false;fileCodeFromOter=''" >取 消</el-button>
+          <el-button type="primary" @click="getCode">确 定</el-button>
+        </div>
+      </el-dialog>
+
+
+
+
   </div>
 </template>
 <script>
@@ -102,7 +143,12 @@ export default {
       curruntFile: "", //当前选择文件夹
       fileList: [],
       uploadData: {},
-      delPath: ""
+      delPath: "",
+      dialogVisible:false,
+      fileCode:"",
+      getGetCodeFleg:false,
+      fileCodeFromOter:""
+
     };
   },
   computed: {
@@ -117,6 +163,7 @@ export default {
       return this.path.slice(1);
     }
   },
+  // 页面创建的时候
   created() {
     this.funData();
   },
@@ -124,80 +171,37 @@ export default {
     // 分页导航
     handleSizeChange(val) {
       this.pageSize = val;
-      const url =
-        "http://localhost:9200/readPathInfo?path=" +
-        this.path +
-        "&pageNo=" +
-        this.currentPage +
-        "&pageSize=" +
-        val +
-        "&userType=" +
-        localStorage.getItem("user_type");
-      this.$axios.get(url).then(res => {
-        if (res.data.code === 0) {
-          this.$message.success({
-            message: res.data.msg,
-            center: true
-          });
-          this.tableData = res.data.data.pageData;
-          this.total = res.data.data.totalCount;
-        } else {
-          this.$message.error({
-            message: res.data.msg,
-            center: true
-          });
-        }
-      });
+      this.getTableList();
     },
     handleCurrentChange(val) {
       this.currentPage = val;
-      const url =
-        "http://localhost:9200/readPathInfo?path=" +
-        this.path +
-        "&pageNo=" +
-        val +
-        "&pageSize=" +
-        this.pageSize +
-        "&userType=" +
-        localStorage.getItem("user_type");
-      this.$axios.get(url).then(res => {
-        if (res.data.code === 0) {
-          this.$message.success({
-            message: res.data.msg,
-            center: true
-          });
-          this.tableData = res.data.data.pageData;
-          this.total = res.data.data.totalCount;
-        } else {
-          this.$message.error({
-            message: res.data.msg,
-            center: true
-          });
-        }
-      });
+      this.getTableList();
     },
     funData() {
       if (localStorage.getItem("user_type") === "user") {
         this.userId = localStorage.getItem("ms_id");
       }
-      const url =
-        "http://localhost:9200/readPathInfo?path=" +
-        this.path +
-        "&pageNo=" +
-        "1" +
-        "&pageSize=" +
-        "10" +
-        "&userId=" +
-        this.userId +
-        "&userType=" +
-        localStorage.getItem("user_type");
-      this.$axios.get(url).then(res => {
+      this.getTableList();
+    },
+    // 获取table数据
+    getTableList() {
+      const url = "http://localhost:9200/readPathInfo"
+      const params = {
+        path: this.path,
+        pageNo: this.currentPage,
+        pageSize: this.pageSize,
+        userId: this.userId,
+        userType: localStorage.getItem("user_type")
+      };
+     
+      this.$axios.get(url, params).then(res => {
         if (res.data.code === 0) {
           this.$message.success({
             message: res.data.msg,
             center: true
           });
-          this.tableData = res.data.data.pageData;
+          const tempData = res.data.data.pageData;
+          this.tableData = tempData;
           this.total = res.data.data.totalCount;
         } else {
           this.$message.error({
@@ -274,6 +278,38 @@ export default {
     upload_success(response, file, fileList) {
       this.funData();
     },
+
+
+
+    createCode(fullPath){
+      const url = "http://localhost:9200/createCode"
+      const params = {
+        fullPath: fullPath
+      };
+      this.$axios.post(url, params).then(res => {
+        if (res.data.code === 0) {
+           this.fileCode=res.data.data,
+           this.dialogVisible=true
+
+        } else {
+          this.$message.error({
+            message: res.data.msg,
+            center: true
+          });
+        }
+      });
+    },
+
+    openGetCode(){
+       this.getGetCodeFleg=true
+    },
+    getCode(){
+       
+    },
+
+
+
+
     downLoad(fullPath) {
       const par = {
         path: fullPath
