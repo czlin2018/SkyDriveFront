@@ -11,6 +11,7 @@
         :show-file-list="false"
         action="http://localhost:9200/createFile"
         :on-success="upload_success"
+        :before-upload="before_upload"
         :limit="1"
         style="display:inline-block;margin: 0 5px;"
       >
@@ -25,9 +26,9 @@
       </el-button>
     </div>
     <div style="margin-bottom:15px;">
-      <el-button type="text" size="mini" :disabled="showBtn" @click="backPrev">返回上一级</el-button>
-      <span style="display:inline-block;margin: 0 5px;">|</span>
       <el-button type="text" size="mini" @click="backAll" :disabled="showBtn">全部文件</el-button>
+      <span style="display:inline-block;margin: 0 5px;">|</span>
+      <el-button type="text" size="mini" :disabled="showBtn" @click="backPrev">返回上一级</el-button>
       <span v-if="this.path !== '/'" style="display:inline-block;margin: 0 5px;">- {{showPath}}</span>
     </div>
     <el-table :data="tableData" :height="height" style="width: 100%">
@@ -83,7 +84,7 @@
     <el-dialog title="创建文件夹" :visible.sync="fileVisible" width="450px" top="30vh">
       <el-input
         size="mini"
-        v-model="fileName"
+        v-model="directoryName"
         style="display:inline-block;width:340px;margin-right:10px;"
       ></el-input>
       <el-button type="primary" size="mini" @click="saveFile">保存</el-button>
@@ -131,7 +132,8 @@ export default {
       getCreatCodeFlag: false,
       fileCode: "",
       getGetCodeFlag: false,
-      fileCodeFromOter: ""
+      fileCodeFromOter: "",
+      directoryName:""
     };
   },
   computed: {
@@ -161,9 +163,8 @@ export default {
       this.getTableList();
     },
     funData() {
-      if (localStorage.getItem("user_type") === "user") {
-        this.userId = localStorage.getItem("ms_id");
-      }
+      this.userType= localStorage.getItem("user_type"),
+      this.userId =  localStorage.getItem("ms_id");
       this.getTableList();
     },
     // 获取table数据
@@ -174,7 +175,7 @@ export default {
         pageNo: this.currentPage,
         pageSize: this.pageSize,
         userId: this.userId,
-        userType: localStorage.getItem("user_type")
+        userType: this.userType
       };
 
       this.$axios.get(url, params).then(res => {
@@ -207,14 +208,10 @@ export default {
     // 保存新增文件夹
     saveFile() {
       const par = {
-        path:
-          this.path === "/"
-            ? this.path + this.fileName
-            : this.path + "/" + this.fileName,
-        userId:
-          localStorage.getItem("user_type") === "idmin"
-            ? ""
-            : localStorage.getItem("ms_id")
+        path: this.path ,
+        directoryName:this.directoryName,
+        userId:this.userId,
+        userType:this.userType
       };
 
       this.$axios.post("http://localhost:9200/mkdir", par).then(res => {
@@ -256,10 +253,14 @@ export default {
         path: this.path
       };
       this.uploadData.path = par.path;
-      this.uploadData.userId = localStorage.getItem("ms_id");
+      this.uploadData.userId = this.userId;
+      this.uploadData.userType = this.userType;
     },
     upload_success(response, file, fileList) {
       this.funData();
+    },
+     before_upload(file) {
+      console.log(file.size)
     },
 
     createCode(fullPath) {
@@ -286,7 +287,8 @@ export default {
       const params = {
         path: this.path,
         fileCodeFromOter: this.fileCodeFromOter,
-        userId: localStorage.getItem("ms_id")
+        userId: this.userId,
+        userType:this.userType
       };
       this.$axios.post(url, params).then(res => {
         if (res.data.code === 0) {
@@ -322,16 +324,17 @@ export default {
             center: true
           });
         }
-        this.this.funData();
+        this.funData();
       });
     },
     deletefile(row) {
-      this.delPath =
-        this.path === "/" ? this.path + row.name : this.path + "/" + row.name;
-      // //如果是文件,取得全名
-      // this.delPath = row.directory === "0" ? row.fullPath : this.path;
 
-      console.log(this.delPath);
+      const url = "http://localhost:9200/deleteFile";
+      const params = {
+        fullPath: row.fullPath,
+        id:row.id,
+        isShare:row.isShare
+      };
       this.$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
@@ -339,7 +342,7 @@ export default {
       })
         .then(() => {
           this.$axios
-            .get("http://localhost:9200/deleteFile?path=" + this.delPath)
+            this.$axios.get(url, params)
             .then(res => {
               if (res.data.code === 0) {
                 this.$message.success({

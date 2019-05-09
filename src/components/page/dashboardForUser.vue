@@ -5,27 +5,26 @@
                 <el-card shadow="hover" class="mgb20" style="height:252px;">
                     <div class="user-info">
                         <img src="../../assets/img/img.jpg" class="user-avator" alt="">
-                        <div class="user-info-cont">·
+                        <div class="user-info-cont">
                             <div class="user-info-name">{{name}}</div>
                             <div>{{role}}</div>
                         </div>
                     </div>
-                    <div class="user-info-list">当前系统时间：<span>{{ curretTime }}</span></div>
+                    <div class="user-info-list">上次登录时间：<span>2018-01-01</span></div>
+                    <div class="user-info-list">上次登录地点：<span>东莞1</span></div>
                 </el-card>
                 <el-card shadow="hover" style="height:252px;">
                     <div slot="header" class="clearfix">
-                        <span>网盘容量</span>
+                        <span>语言详情</span>
                     </div>
-                    
-  
-                    <!-- Vue
+                    Vue
                     <el-progress :percentage="71.3" color="#42b983"></el-progress>
                     JavaScript
                     <el-progress :percentage="24.1" color="#f1e05a"></el-progress>
                     CSS
                     <el-progress :percentage="3.7"></el-progress>
                     HTML
-                    <el-progress :percentage="0.9" color="#f56c6c"></el-progress> -->
+                    <el-progress :percentage="0.9" color="#f56c6c"></el-progress>
                 </el-card>
             </el-col>
             <el-col :span="16">
@@ -35,8 +34,8 @@
                             <div class="grid-content grid-con-1">
                                 <i class="el-icon-lx-people grid-con-icon"></i>
                                 <div class="grid-cont-right">
-                                    <div class="grid-num">{{userNum}}</div>
-                                    <div>用户数量</div>
+                                    <div class="grid-num">1234</div>
+                                    <div>用户访问量</div>
                                 </div>
                             </div>
                         </el-card>
@@ -46,7 +45,7 @@
                             <div class="grid-content grid-con-2">
                                 <i class="el-icon-lx-notice grid-con-icon"></i>
                                 <div class="grid-cont-right">
-                                    <div class="grid-num">{{sourceNum}}</div>
+                                    <div class="grid-num">321</div>
                                     <div>系统文件量</div>
                                 </div>
                             </div>
@@ -57,8 +56,8 @@
                             <div class="grid-content grid-con-3">
                                 <i class="el-icon-lx-goods grid-con-icon"></i>
                                 <div class="grid-cont-right">
-                                    <div class="grid-num">361</div>
-                                    <div>网站点击量</div>
+                                    <div class="grid-num">5000</div>
+                                    <div>用户数量</div>
                                 </div>
                             </div>
                         </el-card>
@@ -109,7 +108,7 @@
     import Schart from 'vue-schart';
     import bus from '../common/bus';
     export default {
-        name: 'dashboard',
+        name: 'dashboardForuser',
         data() {
             return {
                 name: localStorage.getItem('ms_username'),
@@ -167,10 +166,7 @@
                     bgColor: '#F5F8FD',
                     bottomPadding: 30,
                     topPadding: 30
-                },
-                curretTime: '',
-                userNum:"",
-                sourceNum:""
+                }
             }
         },
         components: {
@@ -178,17 +174,12 @@
         },
         computed: {
             role() {
-                this.name=
-                localStorage.getItem("user_type") === 'admin' ? '超级管理员' : '普通用户';
-            
+                return this.name === 'admin' ? '超级管理员' : '普通用户';
             }
         },
         created(){
             this.handleListener();
             this.changeDate();
-            this.timeOut();
-            this.getUserNum();
-            this.getSourceNum();
         },
         activated(){
             this.handleListener();
@@ -216,42 +207,8 @@
                 }, 300);
             },
             renderChart(){
-                if (this.$refs.bar) {
-                    console.log(this.$refs.bar);
-                    this.$refs.bar.renderChart();
-                    this.$refs.line.renderChart();
-                }
-            },
-            timeOut() {
-                setInterval(() => {
-                    this.curretTime = new Date().toLocaleString();
-                }, 1000);
-            },
-            getUserNum() {
-                this.$axios.get("http://localhost:9100/register/getUserNum").then(res => {
-                        if (res.data.code === 0) {
-                            this.userNum=res.data.data;
-                        } else {
-                        this.$message.error({
-                            message: res.data.msg,
-                            center: true
-                        });
-                        }
-                      
-                    });
-            },
-               getSourceNum() {
-                this.$axios.get("http://localhost:9200/getSourceNum").then(res => {
-                        if (res.data.code === 0) {
-                            this.sourceNum=res.data.data;
-                        } else {
-                        this.$message.error({
-                            message: res.data.msg,
-                            center: true
-                        });
-                        }
-                 
-                    });
+                this.$refs.bar.renderChart();
+                this.$refs.line.renderChart();
             }
         }
     }
