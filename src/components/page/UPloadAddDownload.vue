@@ -41,23 +41,16 @@
           >{{scope.row.name}}</el-button>
           <span v-if="!scope.row.directory">{{scope.row.name}}</span>
         </template>
-
       </el-table-column>
-      <el-table-column label="更新时间"  align="center">
+      <el-table-column label="更新时间" align="center">
         <template slot-scope="scope">
           <span>{{scope.row.updateTime}}</span>
-      
         </template>
       </el-table-column>
 
-
       <el-table-column label="操作" width="200px" align="center">
         <template slot-scope="scope">
-          <el-button
-            type="text"
-            size="mini"
-            @click="deletefile(scope.row)"
-          >删除</el-button>
+          <el-button type="text" size="mini" @click="deletefile(scope.row)">删除</el-button>
           <span v-if="!scope.row.directory" style="display:inline-block;margin: 0 5px;">|</span>
           <el-button
             v-if="!scope.row.directory"
@@ -72,7 +65,6 @@
             size="mini"
             @click="createCode(scope.row.fullPath)"
           >生成分享码</el-button>
-
         </template>
       </el-table-column>
     </el-table>
@@ -96,33 +88,25 @@
       ></el-input>
       <el-button type="primary" size="mini" @click="saveFile">保存</el-button>
     </el-dialog>
-    <el-dialog
-        title="获取分享码"
-        :visible.sync="dialogVisible"
-        width="30%"
-      >
-        <span>获取成功：{{fileCode}}</span>
-        <span slot="footer" class="dialog-footer">
-          <el-button @click="dialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
-        </span>
-      </el-dialog>
+    <el-dialog title="获取分享码" :visible.sync="getCreatCodeFlag" width="30%">
+      <span>获取成功：{{fileCode}}</span>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="getCreatCodeFlag = false">取 消</el-button>
+        <el-button type="primary" @click="getCreatCodeFlag = false">确 定</el-button>
+      </span>
+    </el-dialog>
 
-      <el-dialog title="得到分享码" :visible.sync="getGetCodeFleg">
-        <el-form :model="form">
-          <el-form-item label="请输入分享码" :label-width="formLabelWidth">
-            <el-input v-model="fileCodeFromOter" autocomplete="off"></el-input>
-          </el-form-item>
-        </el-form>
-        <div slot="footer" class="dialog-footer">
-          <el-button @click="getGetCodeFleg = false;fileCodeFromOter=''" >取 消</el-button>
-          <el-button type="primary" @click="getCode">确 定</el-button>
-        </div>
-      </el-dialog>
-
-
-
-
+    <el-dialog title="得到分享码" :visible.sync="getGetCodeFlag">
+      <el-form>
+        <el-form-item label="请输入分享码">
+          <el-input v-model="fileCodeFromOter" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="getGetCodeFlag = false;fileCodeFromOter=''">取 消</el-button>
+        <el-button type="primary" @click="getCode">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -144,11 +128,10 @@ export default {
       fileList: [],
       uploadData: {},
       delPath: "",
-      dialogVisible:false,
-      fileCode:"",
-      getGetCodeFleg:false,
-      fileCodeFromOter:""
-
+      getCreatCodeFlag: false,
+      fileCode: "",
+      getGetCodeFlag: false,
+      fileCodeFromOter: ""
     };
   },
   computed: {
@@ -185,7 +168,7 @@ export default {
     },
     // 获取table数据
     getTableList() {
-      const url = "http://localhost:9200/readPathInfo"
+      const url = "http://localhost:9200/readPathInfo";
       const params = {
         path: this.path,
         pageNo: this.currentPage,
@@ -193,7 +176,7 @@ export default {
         userId: this.userId,
         userType: localStorage.getItem("user_type")
       };
-     
+
       this.$axios.get(url, params).then(res => {
         if (res.data.code === 0) {
           this.$message.success({
@@ -279,18 +262,14 @@ export default {
       this.funData();
     },
 
-
-
-    createCode(fullPath){
-      const url = "http://localhost:9200/createCode"
+    createCode(fullPath) {
+      const url = "http://localhost:9200/createCode";
       const params = {
         fullPath: fullPath
       };
       this.$axios.post(url, params).then(res => {
         if (res.data.code === 0) {
-           this.fileCode=res.data.data,
-           this.dialogVisible=true
-
+          (this.fileCode = res.data.data), (this.getCreatCodeFlag = true);
         } else {
           this.$message.error({
             message: res.data.msg,
@@ -299,16 +278,33 @@ export default {
         }
       });
     },
-
-    openGetCode(){
-       this.getGetCodeFleg=true
+    openGetCode() {
+      this.getGetCodeFlag = true;
     },
-    getCode(){
-       
+    getCode() {
+      const url = "http://localhost:9200/getCode";
+      const params = {
+        path: this.path,
+        fileCodeFromOter: this.fileCodeFromOter,
+        userId: localStorage.getItem("ms_id")
+      };
+      this.$axios.post(url, params).then(res => {
+        if (res.data.code === 0) {
+          (this.fileCode = res.data.data),
+            (this.fileCodeFromOter = ""),
+            (this.getCreatCodeFlag = true);
+        } else {
+          this.$message.error({
+            message: res.data.msg,
+            center: true
+          });
+        }
+        this.getCreatCodeFlag = false;
+        this.getGetCodeFlag = false;
+
+        this.funData();
+      });
     },
-
-
-
 
     downLoad(fullPath) {
       const par = {
@@ -326,11 +322,15 @@ export default {
             center: true
           });
         }
+        this.this.funData();
       });
     },
     deletefile(row) {
       this.delPath =
         this.path === "/" ? this.path + row.name : this.path + "/" + row.name;
+      // //如果是文件,取得全名
+      // this.delPath = row.directory === "0" ? row.fullPath : this.path;
+
       console.log(this.delPath);
       this.$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
         confirmButtonText: "确定",
