@@ -16,7 +16,7 @@ export default {
             resolve(res);
           }
           else {
-            reject(res);
+            resolve(res);
           }
         },
         err => {
@@ -41,7 +41,7 @@ export default {
             resolve(res);
           }
           else {
-            reject(res);
+            resolve(res);
           }
         },
         err => {

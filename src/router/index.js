@@ -7,7 +7,7 @@ export default new Router({
   routes: [
   {
     path: '/',
-    redirect: '/dashboard'
+    redirect: '/login'
   },
   {
     path: '/',
@@ -16,13 +16,13 @@ export default new Router({
     children: [
     {
       path: '/dashboard',
-      component: resolve => require(['../components/page/Dashboard.vue'], resolve),  
+      component: resolve => require(['../components/page/Dashboard.vue'], resolve),
       meta: { title: '管理员首页' }
     },
     {
       path: '/dashboardForUser',
-      component: resolve => require(['../components/page/dashboardForUser.vue'], resolve),  
-      meta: { title: '用户' }
+      component: resolve => require(['../components/page/dashboardForUser.vue'], resolve),
+      meta: { title: '用户首页' }
     },
     {
       path: '/icon',
@@ -38,6 +38,11 @@ export default new Router({
       path: '/uPloadAddDownload',
       component: resolve => require(['../components/page/UPloadAddDownload.vue'], resolve),
       meta: { title: '文件管理' }
+    },
+    {
+      path: '/ResourceUploading',
+      component: resolve => require(['../components/page/ResoureUploading.vue'], resolve),
+      meta: { title: '文件上传' }
     },
     {
       path: '/form',

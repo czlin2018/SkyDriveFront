@@ -6,12 +6,15 @@
         <i class="el-icon-edit el-icon--right"></i>
       </el-button>
       <el-upload
+        ref="upload"
         class="upload-demo"
         :data="uploadData"
         :show-file-list="false"
         action="http://localhost:9200/createFile"
         :on-success="upload_success"
         :before-upload="before_upload"
+        :on-exceed="on_exceed"
+        :on-progress="on_progress"
         :limit="1"
         style="display:inline-block;margin: 0 5px;"
       >
@@ -133,7 +136,7 @@ export default {
       fileCode: "",
       getGetCodeFlag: false,
       fileCodeFromOter: "",
-      directoryName:""
+      directoryName: ""
     };
   },
   computed: {
@@ -163,8 +166,8 @@ export default {
       this.getTableList();
     },
     funData() {
-      this.userType= localStorage.getItem("user_type"),
-      this.userId =  localStorage.getItem("ms_id");
+      (this.userType = localStorage.getItem("user_type")),
+        (this.userId = localStorage.getItem("ms_id"));
       this.getTableList();
     },
     // 获取table数据
@@ -208,10 +211,10 @@ export default {
     // 保存新增文件夹
     saveFile() {
       const par = {
-        path: this.path ,
-        directoryName:this.directoryName,
-        userId:this.userId,
-        userType:this.userType
+        path: this.path,
+        directoryName: this.directoryName,
+        userId: this.userId,
+        userType: this.userType
       };
 
       this.$axios.post("http://localhost:9200/mkdir", par).then(res => {
@@ -257,10 +260,20 @@ export default {
       this.uploadData.userType = this.userType;
     },
     upload_success(response, file, fileList) {
+      console.log("上传成功");
+      console.log(file.name);
+      this.$refs.upload.clearFiles();
       this.funData();
     },
-     before_upload(file) {
-      console.log(file.size)
+    on_progress(file) {
+      console.log("上传中...移除文件");
+      this.$refs.upload.clearFiles();
+    },
+    before_upload(file) {
+      console.log(file.size);
+    },
+    on_exceed() {
+      console.log("超出数量限制");
     },
 
     createCode(fullPath) {
@@ -288,7 +301,7 @@ export default {
         path: this.path,
         fileCodeFromOter: this.fileCodeFromOter,
         userId: this.userId,
-        userType:this.userType
+        userType: this.userType
       };
       this.$axios.post(url, params).then(res => {
         if (res.data.code === 0) {
@@ -328,12 +341,11 @@ export default {
       });
     },
     deletefile(row) {
-
       const url = "http://localhost:9200/deleteFile";
       const params = {
         fullPath: row.fullPath,
-        id:row.id,
-        isShare:row.isShare
+        id: row.id,
+        isShare: row.isShare
       };
       this.$confirm("此操作将永久删除该文件, 是否继续?", "提示", {
         confirmButtonText: "确定",
@@ -341,22 +353,21 @@ export default {
         type: "warning"
       })
         .then(() => {
-          this.$axios
-            this.$axios.get(url, params)
-            .then(res => {
-              if (res.data.code === 0) {
-                this.$message.success({
-                  message: res.data.msg,
-                  center: true
-                });
-                this.funData();
-              } else {
-                this.$message.error({
-                  message: res.data.msg,
-                  center: true
-                });
-              }
-            });
+          this.$axios;
+          this.$axios.get(url, params).then(res => {
+            if (res.data.code === 0) {
+              this.$message.success({
+                message: res.data.msg,
+                center: true
+              });
+              this.funData();
+            } else {
+              this.$message.error({
+                message: res.data.msg,
+                center: true
+              });
+            }
+          });
         })
         .catch(() => {
           this.$message({

@@ -12,7 +12,11 @@
     >
       <template v-for="item in items">
         <template v-if="item.subs">
-          <el-submenu  v-if="(item.forAdmin && isAdmin) || (item.forUser && !isAdmin)"  :index="item.index" :key="item.index">
+          <el-submenu
+            v-if="(item.forAdmin && isAdmin) || (item.forUser && !isAdmin)"
+            :index="item.index"
+            :key="item.index"
+          >
             <template slot="title">
               <i :class="item.icon"></i>
               <span slot="title">{{ item.title }}</span>
@@ -31,7 +35,11 @@
           </el-submenu>
         </template>
         <template v-else>
-          <el-menu-item v-if="(item.forAdmin && isAdmin) || (item.forUser && !isAdmin)" :index="item.index" :key="item.index">
+          <el-menu-item
+            v-if="(item.forAdmin && isAdmin) || (item.forUser && !isAdmin)"
+            :index="item.index"
+            :key="item.index"
+          >
             <i :class="item.icon"></i>
             <span slot="title">{{ item.title }}</span>
           </el-menu-item>
@@ -55,7 +63,7 @@ export default {
           forUser: false,
           forAdmin: true
         },
-          {
+        {
           icon: "el-icon-lx-home",
           index: "dashboardForuser",
           title: "用户首页",
@@ -74,6 +82,13 @@ export default {
           index: "uPloadAddDownload",
           forUser: true,
           title: "文件管理",
+          forAdmin: true
+        },
+        {
+          icon: "el-icon-upload2",
+          index: "ResourceUploading",
+          forUser: true,
+          title: "文件上传",
           forAdmin: true
         },
         {
@@ -170,7 +185,7 @@ export default {
       this.collapse = msg;
     });
     //
-    this.isAdmin = localStorage.getItem("user_type") == 'admin';
+    this.isAdmin = localStorage.getItem("user_type") == "admin";
   }
 };
 </script>

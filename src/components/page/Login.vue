@@ -159,7 +159,7 @@ export default {
             localStorage.setItem("ms_username", res.data.data.name);
             localStorage.setItem("ms_id", res.data.data.userId);
             localStorage.setItem("user_type", res.data.data.userType);
-            this.$router.push("/");
+            this.$router.push("/dashboard");
           } else {
             this.$message.error({
               message: res.data.msg,
