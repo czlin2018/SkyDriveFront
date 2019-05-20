@@ -46,6 +46,11 @@
           <span v-if="!scope.row.directory">{{scope.row.name}}</span>
         </template>
       </el-table-column>
+      <el-table-column label="文件大小(KB)" align="center">
+        <template slot-scope="scope">
+          <span>{{scope.row.size}}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="更新时间" align="center">
         <template slot-scope="scope">
           <span>{{scope.row.updateTime}}</span>
@@ -183,10 +188,10 @@ export default {
 
       this.$axios.get(url, params).then(res => {
         if (res.data.code === 0) {
-          this.$message.success({
-            message: res.data.msg,
-            center: true
-          });
+          // this.$message.success({
+          //   message: res.data.msg,
+          //   center: true
+          // });
           const tempData = res.data.data.pageData;
           this.tableData = tempData;
           this.total = res.data.data.totalCount;

@@ -26,6 +26,8 @@
         <el-table-column prop="id" label="编号" sortable width="150"></el-table-column>
         <el-table-column prop="name" label="姓名" width="120"></el-table-column>
         <el-table-column prop="userId" label="邮箱"></el-table-column>
+        <el-table-column prop="size" label="网盘容量(Mb)"></el-table-column>
+        <el-table-column prop="sizeHadUsred" label="已使用容量(Mb)"></el-table-column>
         <el-table-column label="操作" width="180" align="center">
           <template slot-scope="scope">
             <el-button type="text" icon="el-icon-edit" @click="handleEdit(scope.row)">编辑</el-button>
@@ -64,6 +66,9 @@
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="form.email"></el-input>
         </el-form-item>
+        <el-form-item label="容量" prop="size">
+          <el-input v-model="form.size"></el-input>
+        </el-form-item>
         <el-form-item>
           <el-radio v-model="form.userType" label="admin">管理员</el-radio>
           <el-radio v-model="form.userType" label="user">普通用户</el-radio>
@@ -100,7 +105,9 @@ export default {
         name: "",
         id: "",
         email: "",
-        userType: ""
+        userType: "",
+        size: "",
+        sizeHadUsred: ""
       },
       currentPage: 1,
       pageSize: 10,
@@ -174,7 +181,8 @@ export default {
         name: row.name,
         id: row.id,
         email: row.userId,
-        userType: row.userType
+        userType: row.userType,
+        size: row.size
       };
       this.editVisible = true;
       if (this.form.name === localStorage.getItem("ms_username")) {
@@ -232,7 +240,8 @@ export default {
           id: this.form.id,
           userId: this.form.email,
           name: this.form.name,
-          userType: this.form.userType
+          userType: this.form.userType,
+          size: this.form.size
         };
         console.log(par);
         this.$axios.post(url, par).then(res => {

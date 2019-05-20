@@ -159,7 +159,9 @@ export default {
             localStorage.setItem("ms_username", res.data.data.name);
             localStorage.setItem("ms_id", res.data.data.userId);
             localStorage.setItem("user_type", res.data.data.userType);
-            this.$router.push("/dashboard");
+            if (res.data.data.userType === "admin") {
+              this.$router.push("/dashboard");
+            } else this.$router.push("/dashboardForuser");
           } else {
             this.$message.error({
               message: res.data.msg,
